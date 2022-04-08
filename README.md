@@ -1,1 +1,1 @@
-# Deep_learning_mini_projects
+This directory contains the files of the two projects.
