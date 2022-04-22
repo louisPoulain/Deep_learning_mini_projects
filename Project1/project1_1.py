@@ -19,7 +19,7 @@ def psnr(denoised, ground_truth):
 
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
-    def __init__(self, SIZE, train = True):
+  def __init__(self, SIZE, train = True):
         'Initialization'
         if train: 
             x, y = torch.load("train_data.pkl")
@@ -33,11 +33,11 @@ class Dataset(torch.utils.data.Dataset):
         self.x = x
         self.y = y
 
-    def __len__(self):
+  def __len__(self):
         'Denotes the total number of samples'
         return len(self.x)
 
-    def __getitem__(self, index):
+  def __getitem__(self, index):
         'Generates one sample of data'
         # get label
         X = self.x[index]
@@ -56,6 +56,12 @@ for i in range(N):
     plt.subplot(2, N, 2*i+2)
     plt.imshow(train_set.y[i].permute(1, 2, 0))
 plt.show()
+
+
+# Recall on torch.conv2d:
+    # receive a C x H x W input tensor, say kernel size is C x h x w
+    # output is a D x (H - h + 1) x (W - w + 1) tensor (D = number of output channels)
+    # implementation: nn.conv2d(in = C, out = D, kernel_size = (h, w), stride, padding, ...)
 
 #let's create a simple auto-encoder first:
 class AE(torch.nn.Module):
