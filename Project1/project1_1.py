@@ -45,8 +45,8 @@ class Dataset(torch.utils.data.Dataset):
         Y = self.y[index]
         return X, Y
 
-SIZE = 500
-BATCH_SIZE = 5
+SIZE = 5000
+BATCH_SIZE = 4
 train_set = Dataset(SIZE)
 N = 20
 plt.figure()
@@ -66,9 +66,34 @@ class AE(torch.nn.Module):
         super().__init__()
 
         self.encoder = torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels = 3, out_channels = 2, kernel_size = 5),
-            torch.nn.ReLU()
+            torch.nn.LeakyReLU(negative_slope=0.1),
+            
+            torch.nn.LeakyReLU(negative_slope = 0.1),
+            torch.nn.MaxPool2d(kernel_size = 2),
+
+            torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same'),
+            torch.nn.LeakyReLU(negative_slope = 0.1),
+            torch.nn.MaxPool2d(kernel_size = 2),
+
+            torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same'),
+            torch.nn.LeakyReLU(negative_slope = 0.1),
+            torch.nn.MaxPool2d(kernel_size = 2),
+            
+            torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same'),
+            torch.nn.LeakyReLU(negative_slope = 0.1),
+            torch.nn.MaxPool2d(kernel_size = 2),
+            
+            torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same'),
+            torch.nn.LeakyReLU(negative_slope = 0.1),
+            torch.nn.MaxPool2d(kernel_size = 2),
+            
+            torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same'),
+            torch.nn.Upsample(size=(2,2))
         )
+
+        self.enc_conv0 = torch.nn.Conv2d(in_channels = 3, out_channels = 48, kernel_size = 3, padding = 'same'),
+        self.enc_conv1 = torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same')
+
         self.decoder = torch.nn.Sequential(
             torch.nn.ConvTranspose1d(in_channels = 2, out_channels = 3, kernel_size = (5, 5)),
             torch.nn.Sigmoid()
@@ -87,7 +112,8 @@ model = AE()
 loss_function = torch.nn.L1Loss()
   
 # Using an Adam Optimizer with lr = 0.001
-optimizer = torch.optim.Adam(model.parameters(), lr = 1e-3)
+optimizer = torch.optim.Adam(model.parameters(),
+                             lr = 1e-3, betas=(0.9, 0.99))
 
 # DataLoader is used to load the dataset 
 # for training
