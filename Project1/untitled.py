@@ -6,6 +6,8 @@ class Noise2noise(nn.Module):
         super(Noise2noise, self).__init__()
         
         # define layers and activation functions
+        self.act = nn.ReLU()
+        self.conv1 = nn.con
         
     
     
