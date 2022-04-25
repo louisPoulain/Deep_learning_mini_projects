@@ -10,26 +10,29 @@ SIZE = 500
 BATCH_SIZE = 1
 test_set = Dataset(SIZE, train = False)
 
+"""plt.subplot(2, 1, 1)
+plt.imshow(test_set.x[-1].permute(1, 2, 0).int())
+plt.subplot(2, 1, 2)
+plt.imshow(test_set.y[-1].permute(1, 2, 0).int())
+plt.show()"""
+
 loader_1 = torch.utils.data.DataLoader(dataset = test_set,
                                      batch_size = BATCH_SIZE,
                                      shuffle = True)
 
-PSNR = []
+PSNR = torch.empty(size = (1, SIZE))
+i = 0
 for noisy_imgs, ground_truth in loader_1:
     denoised = model(noisy_imgs)
-    PSNR.append(psnr(denoised, ground_truth).detach().numpy())
+    PSNR[0, i] = psnr(denoised/255, ground_truth/255)
+    i += 1
     
-plt.subplot(2, 1, 1)
-print(denoised.shape)
-print(ground_truth.shape)
-plt.imshow(torch.squeeze(denoised).permute(1, 2, 0).detach().numpy())
-plt.subplot(2, 1, 2)
-plt.imshow(torch.squeeze(ground_truth).permute(1, 2, 0).detach().numpy())
-plt.show()
+plot_3imgs(denoised, ground_truth, noisy_imgs)
 
+print("PSNR mean : ", torch.mean(PSNR).item(), " dB")
 plt.style.use('fivethirtyeight')
 plt.ylabel('PSNR')
-plt.plot(PSNR)
+plt.plot(PSNR[0,:].detach().numpy())
 plt.show()
 
 

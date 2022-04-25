@@ -1,5 +1,6 @@
 import torch 
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
 
 def psnr(denoised, ground_truth):
     # Peak Signal to Noise Ratio: denoised and ground ̇truth have range [0, 1] 
@@ -32,6 +33,18 @@ class Dataset(torch.utils.data.Dataset):
         X = self.x[index]
         Y = self.y[index]
         return X, Y
+
+def plot_3imgs(denoised, ground_truth, noisy_imgs): #values of the images are in between [0, 255].
+    plt.subplot(1, 3, 1)
+    plt.imshow(torch.squeeze(noisy_imgs).permute(1, 2, 0).int()) #int since the data has been changed to float for the NN.
+    plt.title("Noisy imgs")
+    plt.subplot(1, 3, 2)
+    plt.imshow(torch.squeeze(ground_truth).permute(1, 2, 0).int())
+    plt.title("Groundtruth")
+    plt.subplot(1,3,3)
+    plt.imshow(torch.squeeze(denoised).permute(1, 2, 0).int())
+    plt.title("Denoised")
+    plt.show()
 
 
 # ------------------------- Noise2Noise ---------------------------------------------------------------------------

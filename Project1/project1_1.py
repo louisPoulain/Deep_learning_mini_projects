@@ -15,20 +15,18 @@ all_noisy_imgs = torch.cat((noisy_imgs_1_reduced, noisy_imgs_2_reduced), dim = 0
 print("Concatenated training data (reduced) : \n all_noisy_imgs : ", all_noisy_imgs.shape)
 """
 
-SIZE = 500
+SIZE = 5000
 BATCH_SIZE = 4
 train_set = Dataset(SIZE)
-N = 20
+"""N = 20
 plt.figure()
-
-"""
 for i in range(N):
     plt.subplot(2, N, 2*i+1)
-    plt.imshow(train_set.x[i].permute(1, 2, 0))
+    plt.imshow(train_set.x[i].permute(1, 2, 0).int())
     plt.subplot(2, N, 2*i+2)
-    plt.imshow(train_set.y[i].permute(1, 2, 0))
-plt.show()
-"""
+    plt.imshow(train_set.y[i].permute(1, 2, 0).int())
+plt.show()"""
+
 
 # Model Initialization
 model = Noise2Noise()
