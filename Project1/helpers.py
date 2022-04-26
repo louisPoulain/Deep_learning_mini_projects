@@ -46,31 +46,39 @@ class AE(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.pool = nn.MaxPool2d(kernel_size = 2)
-        self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 64, kernel_size = 3, padding = 'same')
-        self.conv2 = nn.Conv2d(in_channels = 64, out_channels = 64, kernel_size = 3, padding = 'same')
+        self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 64, kernel_size = 3, padding = 'same', padding_mode='reflect')
+        self.conv2 = nn.Conv2d(in_channels = 64, out_channels = 64, kernel_size = 3, padding = 'same', padding_mode='reflect')
         
-        self.deconv1 = nn.Conv2d(in_channels = 128, out_channels = 128, kernel_size = 3, padding = 'same')
-        self.deconv2 = nn.Conv2d(in_channels = 192, out_channels = 128, kernel_size = 3, padding = 'same')
-        self.deconv3 = nn.Conv2d(in_channels = 131, out_channels = 64, kernel_size = 3, padding = 'same')
-        self.deconv4 = nn.Conv2d(in_channels = 64, out_channels = 32, kernel_size = 3, padding = 'same')
-        self.deconv5 = nn.Conv2d(in_channels = 32, out_channels = 3, kernel_size = 3, padding = 'same')
+        self.deconv1 = nn.Conv2d(in_channels = 128, out_channels = 128, kernel_size = 3, padding = 'same', padding_mode='reflect')
+        self.deconv2 = nn.Conv2d(in_channels = 192, out_channels = 128, kernel_size = 3, padding = 'same', padding_mode='reflect')
+        self.deconv3 = nn.Conv2d(in_channels = 131, out_channels = 64, kernel_size = 3, padding = 'same', padding_mode='reflect')
+        self.deconv4 = nn.Conv2d(in_channels = 64, out_channels = 32, kernel_size = 3, padding = 'same', padding_mode='reflect')
+        self.deconv5 = nn.Conv2d(in_channels = 32, out_channels = 3, kernel_size = 3, padding = 'same', padding_mode='reflect')
         
         self.l_relu = nn.LeakyReLU(negative_slope = 0.1)
         self.upsample = nn.Upsample(scale_factor = (2, 2))
+        #self.dropout = nn.Dropout(0.5)
         
         
   
     def forward(self, x):
         # encode
+        
         x1 = self.l_relu(self.conv1(x))
         x2 = self.pool(self.l_relu(self.conv2(x1)))
+        #print(x2.size())
         x3 = self.pool(self.l_relu(self.conv2(x2)))
+        #print(x3.size())
         x4 = self.pool(self.l_relu(self.conv2(x3)))
+        #print(x4.size())
         x5 = self.pool(self.l_relu(self.conv2(x4)))
-        x6 = self.pool(self.l_relu(self.conv2(x5)))
-        x7 = self.l_relu(self.conv2(x6))
+        #print(x5.size())
+        x6 = self.l_relu(self.conv2(x5)) #self.pool
+        #print(x6.size())
+        x7 = self.pool(self.l_relu(self.conv2(x6)))
         x8 = self.upsample(x7)
         x9 = torch.cat((x8, x5), dim = 1)
+        #x9 = self.dropout(x9)
         
         # decode
         y1 = self.l_relu(self.deconv1(x9))
@@ -93,7 +101,7 @@ class AE(torch.nn.Module):
         y17 = self.l_relu(self.deconv3(y16))
         y18 = self.l_relu(self.deconv4(y17))
         y = self.deconv5(y18)
-        #print(y.shape)
+        #y = self.dropout(y)
         return y
 
 def plot_3imgs(denoised, ground_truth, noisy_imgs): #values of the images are in between [0, 255].

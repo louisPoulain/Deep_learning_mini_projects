@@ -26,6 +26,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from datetime import datetime
+import time
 
 
 """
@@ -40,7 +41,7 @@ print("Concatenated training data (reduced) : \n all_noisy_imgs : ", all_noisy_i
 """
 
 SIZE = 5000
-BATCH_SIZE = 4
+BATCH_SIZE = 25
 train_set = Dataset(SIZE)
 
 """N = 20
@@ -75,7 +76,8 @@ epochs = 20
 outputs = []
 losses = []
 for epoch in range(epochs):
-    print("epoch : ", epoch)
+    print("epoch : ", epoch + 1)
+    start = time.time()
     for noisy_imgs_1, noisy_imgs_2 in loader_1:
         #print(noisy_imgs_1.shape)
         #print(noisy_imgs_2.shape)
@@ -97,6 +99,7 @@ for epoch in range(epochs):
         optimizer.step()
         # Storing the losses in a list for plotting
         losses.append(loss.detach().numpy())
+    print('The epoch took {}s to complete\n'.format(time.time() - start))
     outputs.append((epochs, noisy_imgs_2, reconstructed))
   
 # Defining the Plot Style
