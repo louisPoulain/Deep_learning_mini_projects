@@ -46,35 +46,55 @@ class AE(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.pool = nn.MaxPool2d(kernel_size = 2)
-        self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 4, kernel_size = 3, padding = 'same')
-        self.conv2 = nn.Conv2d(in_channels = 4, out_channels = 8, kernel_size = 3, padding = 'same')
-        self.conv3 = nn.Conv2d(in_channels = 8, out_channels = 16, kernel_size = 3, padding = 'same')
-        self.conv4 = nn.Conv2d(in_channels = 16, out_channels = 32, kernel_size = 3, padding = 'same')
-        self.conv5 = nn.Conv2d(in_channels = 32, out_channels = 64, kernel_size = 3, padding = 'same')
+        self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 64, kernel_size = 3, padding = 'same')
+        self.conv2 = nn.Conv2d(in_channels = 64, out_channels = 64, kernel_size = 3, padding = 'same')
         
-        self.deconv1 = nn.ConvTranspose1d(in_channels = 64, out_channels = 32, kernel_size = (7, 7))
-        self.deconv2 = nn.ConvTranspose2d(in_channels = 32, out_channels = 16, kernel_size = (7, 7))
-        self.deconv3 = nn.ConvTranspose2d(in_channels = 16, out_channels = 8, kernel_size = (7, 7))
-        self.deconv4 = nn.ConvTranspose2d(in_channels = 8, out_channels = 4, kernel_size = (7, 7))
-        self.deconv5 = nn.ConvTranspose2d(in_channels = 4, out_channels = 3, kernel_size = (7, 7))
+        self.deconv1 = nn.Conv2d(in_channels = 128, out_channels = 128, kernel_size = 3, padding = 'same')
+        self.deconv2 = nn.Conv2d(in_channels = 192, out_channels = 128, kernel_size = 3, padding = 'same')
+        self.deconv3 = nn.Conv2d(in_channels = 131, out_channels = 64, kernel_size = 3, padding = 'same')
+        self.deconv4 = nn.Conv2d(in_channels = 64, out_channels = 32, kernel_size = 3, padding = 'same')
+        self.deconv5 = nn.Conv2d(in_channels = 32, out_channels = 3, kernel_size = 3, padding = 'same')
         
-        self.l_relu = nn.LeakyReLU(negative_slope = 0.3)
+        self.l_relu = nn.LeakyReLU(negative_slope = 0.1)
+        self.upsample = nn.Upsample(scale_factor = (2, 2))
         
         
   
     def forward(self, x):
-        x_encoded1 = self.l_relu(self.conv1(x))
-        x_encoded2 = self.pool(self.l_relu(self.conv2(x_encoded1)))
-        x_encoded3 = self.pool(self.l_relu(self.conv3(x_encoded2)))
-        x_encoded4 = self.pool(self.l_relu(self.conv4(x_encoded3)))
-        x_encoded5 = self.pool(self.l_relu(self.conv5(x_encoded4)))
+        # encode
+        x1 = self.l_relu(self.conv1(x))
+        x2 = self.pool(self.l_relu(self.conv2(x1)))
+        x3 = self.pool(self.l_relu(self.conv2(x2)))
+        x4 = self.pool(self.l_relu(self.conv2(x3)))
+        x5 = self.pool(self.l_relu(self.conv2(x4)))
+        x6 = self.pool(self.l_relu(self.conv2(x5)))
+        x7 = self.l_relu(self.conv2(x6))
+        x8 = self.upsample(x7)
+        x9 = torch.cat((x8, x5), dim = 1)
         
-        x_decoded1 = self.l_relu(self.deconv1(x_encoded5))
-        x_decoded2 = self.l_relu(self.deconv2(x_decoded1))
-        x_decoded3 = self.l_relu(self.deconv3(x_decoded2))
-        x_decoded4 = self.l_relu(self.deconv4(x_decoded3))
-        x_decoded5 = self.l_relu(self.deconv5(x_decoded4))
-        return x_decoded5
+        # decode
+        y1 = self.l_relu(self.deconv1(x9))
+        y2 = self.l_relu(self.deconv1(y1))
+        y3 = self.l_relu(self.upsample(y2))
+        y4 = torch.cat((y3, x4), dim = 1) # 192 channels
+        y5 = self.l_relu(self.deconv2(y4))
+        y6 = self.l_relu(self.deconv1(y5))
+        y7 = self.upsample(y6)
+        y8 = torch.cat((y7, x3), dim = 1) # 192 channels
+        y9 = self.l_relu(self.deconv2(y8)) # 128 channels
+        #print(y4.size())
+        y10 = self.l_relu(self.deconv1(y9))
+        y11 = self.upsample(y10)
+        y12 = torch.cat((y11, x2), dim = 1) # 192 channels
+        y13 = self.l_relu(self.deconv2(y12))
+        y14 = self.l_relu(self.deconv1(y13))
+        y15 = self.upsample(y14)
+        y16 = torch.cat((y15, x), dim = 1) # 131 channels
+        y17 = self.l_relu(self.deconv3(y16))
+        y18 = self.l_relu(self.deconv4(y17))
+        y = self.deconv5(y18)
+        #print(y.shape)
+        return y
 
 def plot_3imgs(denoised, ground_truth, noisy_imgs): #values of the images are in between [0, 255].
     plt.subplot(1, 3, 1)
