@@ -2,11 +2,11 @@ import torch
 import matplotlib.pyplot as plt
 from utils import *
 
-model = Noise2Noise()
-PATH = "./Noise2Noise/project1_1.pth"
+model = Noise2Noise_2()
+PATH = "./Noise2Noise/project1_2.pth"
 model.load_state_dict(torch.load(PATH))
 
-SIZE = 500
+SIZE = 1000
 BATCH_SIZE = 1
 test_set = Dataset(SIZE, train = False)
 
@@ -18,7 +18,7 @@ plt.show()"""
 
 loader_1 = torch.utils.data.DataLoader(dataset = test_set,
                                      batch_size = BATCH_SIZE,
-                                     shuffle = True)
+                                     shuffle = False)
 
 PSNR = torch.empty(size = (1, SIZE))
 i = 0

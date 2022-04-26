@@ -1,8 +1,8 @@
 import torch
 import matplotlib.pyplot as plt
 from utils import *
+SIZE = 5000
 
-"""
 noisy_imgs_1, noisy_imgs_2 = torch.load("train_data.pkl")
 print("Training data : \n noisiy_imgs_1 : ", noisy_imgs_1.shape, "\n noisy_imgs_2 : ", noisy_imgs_2.shape)
 noisy_imgs, clean_imgs = torch.load("val_data.pkl")
@@ -13,9 +13,9 @@ print("Training data reduced : \n noisiy_imgs_1_reduced : ", noisy_imgs_1_reduce
 
 all_noisy_imgs = torch.cat((noisy_imgs_1_reduced, noisy_imgs_2_reduced), dim = 0)
 print("Concatenated training data (reduced) : \n all_noisy_imgs : ", all_noisy_imgs.shape)
-"""
 
-SIZE = 5000
+
+
 BATCH_SIZE = 4
 train_set = Dataset(SIZE)
 """N = 20
