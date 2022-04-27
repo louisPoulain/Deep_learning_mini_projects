@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 25 18:34:17 2022
+Created on Wed Apr 27 15:43:57 2022
 
 @author: louis
 """
-
+"file for colab"
 import torch 
 # import torch.nn.functional as F
 import torch.nn as nn
@@ -117,4 +117,147 @@ def plot_3imgs(denoised, ground_truth, noisy_imgs, add_title = ''): #values of t
     plt.title("Denoised")
     plt.savefig('./validation_test/' + add_title + '.png', dpi = 300)
     plt.show()
-    
+
+
+
+import torch
+from datetime import datetime
+import time
+
+
+"""
+noisy_imgs_1, noisy_imgs_2 = torch.load("train_data.pkl")
+print("Training data : \n noisiy_imgs_1 : ", noisy_imgs_1.shape, "\n noisy_imgs_2 : ", noisy_imgs_2.shape)
+noisy_imgs, clean_imgs = torch.load("val_data.pkl")
+print("Test data : \n noisiy_imgs : ", noisy_imgs.shape, "\n clean_imgs : ", clean_imgs.shape)
+noisy_imgs_1_reduced, noisy_imgs_2_reduced = noisy_imgs_1[:SIZE], noisy_imgs_2[:SIZE]
+print("Training data reduced : \n noisiy_imgs_1_reduced : ", noisy_imgs_1_reduced.shape, "\n noisy_imgs_2_reduced : ", noisy_imgs_2_reduced.shape)
+all_noisy_imgs = torch.cat((noisy_imgs_1_reduced, noisy_imgs_2_reduced), dim = 0)
+print("Concatenated training data (reduced) : \n all_noisy_imgs : ", all_noisy_imgs.shape)
+"""
+
+SIZE = 50000
+BATCH_SIZE = 100
+train_set = Dataset(SIZE)
+
+"""N = 20
+plt.figure()
+for i in range(N):
+    plt.subplot(2, N, 2*i+1)
+    plt.imshow(train_set.x[i].permute(1, 2, 0).int())
+    plt.subplot(2, N, 2*i+2)
+    plt.imshow(train_set.y[i].permute(1, 2, 0).int())
+plt.show()"""
+
+
+# Model Initialization
+model = AE()
+  
+# Validation using MSE Loss function
+loss_function = nn.L1Loss()
+  
+# Using an Adam Optimizer with lr = 0.001
+optimizer = torch.optim.Adam(model.parameters(),
+                             lr = 1e-3, betas=(0.9, 0.99))
+
+# DataLoader is used to load the dataset 
+# for training
+loader_1 = torch.utils.data.DataLoader(dataset = train_set,
+                                     batch_size = BATCH_SIZE,
+                                     shuffle = True)
+
+
+#OPTIMIZATION
+epochs = 30
+outputs = []
+losses = []
+for epoch in range(epochs):
+    print("epoch : ", epoch + 1)
+    start = time.time()
+    for noisy_imgs_1, noisy_imgs_2 in loader_1:
+        #print(noisy_imgs_1.shape)
+        #print(noisy_imgs_2.shape)
+
+        #noisy_imgs_1 = noisy_imgs_1.reshape(-1, 32 * 32)
+        #noisy_imgs_2 = noisy_imgs_2.reshape(-1, 32 * 32)    
+        # Output of Autoencoder
+        #print("type : ", noisy_imgs_1.dtype)
+        reconstructed = model(noisy_imgs_1)
+            
+        # Calculating the loss function
+        loss = loss_function(reconstructed, noisy_imgs_2)
+            
+        # The gradients are set to zero,
+        # the the gradient is computed and stored.
+        # .step() performs parameter update
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        # Storing the losses in a list for plotting
+        losses.append(loss.detach().numpy())
+    print('The epoch took {}s to complete\n'.format(time.time() - start))
+    outputs.append((epochs, noisy_imgs_2, reconstructed))
+  
+# Defining the Plot Style
+plt.style.use('fivethirtyeight')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+  
+# Plotting the last 100 values
+plt.plot(losses[-100:])
+plt.show()
+
+
+#time = datetime.now().strftime('%m_%d_%Hh_%Mm_%Ss')
+
+#PATH = "./test1/project1_1_" + time + ".pth" # so that we don't overwrite files
+#torch.save(model.state_dict(), PATH)
+
+print('Finished training')
+print('\n\n\n')
+print('------------------------------------------------')
+print("validation")
+print('\n')
+
+
+#model = AE()
+#time = '04_27_13h_14m_41s' # to be filled according to the job we want to load
+#PATH = "./test1/project1_1_" + time + ".pth"
+#model.load_state_dict(torch.load(PATH))
+
+SIZE = 1000
+BATCH_SIZE = 1
+test_set = Dataset(SIZE, train = False)
+
+"""plt.subplot(2, 1, 1)
+plt.imshow(test_set.x[-1].permute(1, 2, 0).int())
+plt.subplot(2, 1, 2)
+plt.imshow(test_set.y[-1].permute(1, 2, 0).int())
+plt.show()"""
+
+loader_2 = torch.utils.data.DataLoader(dataset = test_set,
+                                     batch_size = BATCH_SIZE,
+                                     shuffle = False)
+
+PSNR = torch.empty(size = (1, SIZE))
+i = 0
+for noisy_imgs, ground_truth in loader_2:
+    denoised = model(noisy_imgs)
+    Psnr = psnr(denoised / 255, ground_truth / 255)
+    PSNR[0, i] = Psnr
+    if Psnr > 32:
+        plot_3imgs(denoised, ground_truth, noisy_imgs, add_title = 'good' + str(i))
+    if Psnr < 20:
+        plot_3imgs(denoised, ground_truth, noisy_imgs, add_title = 'bad' + str(i))
+    i += 1
+
+
+
+print("PSNR mean : ", torch.mean(PSNR).item(), " dB")
+plt.style.use('fivethirtyeight')
+plt.ylabel('PSNR')
+plt.plot(PSNR[0,:].detach().numpy())
+plt.show()
+
+
+

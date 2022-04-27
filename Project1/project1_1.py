@@ -40,8 +40,8 @@ all_noisy_imgs = torch.cat((noisy_imgs_1_reduced, noisy_imgs_2_reduced), dim = 0
 print("Concatenated training data (reduced) : \n all_noisy_imgs : ", all_noisy_imgs.shape)
 """
 
-SIZE = 5000
-BATCH_SIZE = 25
+SIZE = 9000
+BATCH_SIZE = 10
 train_set = Dataset(SIZE)
 
 """N = 20

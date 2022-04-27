@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from helpers import AE, plot_3imgs, Dataset, psnr
 
 model = AE()
-time = '04_26_19h_47m_04s' # to be filled according to the job we want to load
+time = '04_27_13h_14m_41s' # to be filled according to the job we want to load
 PATH = "./test1/project1_1_" + time + ".pth"
 model.load_state_dict(torch.load(PATH))
 
@@ -34,10 +34,13 @@ for noisy_imgs, ground_truth in loader_1:
     denoised = model(noisy_imgs)
     Psnr = psnr(denoised / 255, ground_truth / 255)
     PSNR[0, i] = Psnr
-        
+    if Psnr > 32:
+        plot_3imgs(denoised, ground_truth, noisy_imgs, add_title = 'good' + str(i))
+    if Psnr < 20:
+        plot_3imgs(denoised, ground_truth, noisy_imgs, add_title = 'bad' + str(i))
     i += 1
 
-plot_3imgs(denoised, ground_truth, noisy_imgs)
+
 
 print("PSNR mean : ", torch.mean(PSNR).item(), " dB")
 plt.style.use('fivethirtyeight')
