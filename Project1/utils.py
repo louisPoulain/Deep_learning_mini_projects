@@ -274,3 +274,80 @@ class Noise2Noise_2(torch.nn.Module): #we replace the upsampling by conv transpo
         x27 = self.dec_conv1C(x26)
 
         return x27
+
+class Noise2Noise_3(torch.nn.Module): 
+    #we replace the upsampling by conv transpose and make it shorter.
+    def __init__(self):
+        super().__init__()
+
+        self.enc_conv0 = torch.nn.Conv2d(in_channels = 3, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.enc_conv1 = torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.pool1 = torch.nn.MaxPool2d(kernel_size = 2)
+        self.enc_conv2 = torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.pool2 = torch.nn.MaxPool2d(kernel_size = 2)
+        self.enc_conv5 = torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.pool5 = torch.nn.MaxPool2d(kernel_size = 2)
+        self.enc_conv6 = torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same')
+        
+        #we replace an upsampling by a conv transpose
+        self.upsample5 = torch.nn.ConvTranspose2d(48, 48, 3, stride=2, padding=1, output_padding=1) #torch.nn.Upsample(size=(2,2))
+        self.dec_conv3A = torch.nn.Conv2d(in_channels = 96, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.dec_conv3B = torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.upsample2 = torch.nn.ConvTranspose2d(48, 48, 3, stride=2, padding=1, output_padding=1) #torch.nn.Upsample(size = 16)
+        self.dec_conv2A = torch.nn.Conv2d(in_channels = 96, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.dec_conv2B = torch.nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 'same')
+        self.upsample1 = torch.nn.ConvTranspose2d(48, 48, 3, stride=2, padding=1, output_padding=1) #torch.nn.Upsample(size = 32)
+        self.dec_conv1A = torch.nn.Conv2d(in_channels = 48 + 3, out_channels = 32, kernel_size = 3, padding = 'same')
+        self.dec_conv1B = torch.nn.Conv2d(in_channels = 32, out_channels = 32, kernel_size = 3, padding = 'same')
+        self.dec_conv1C = torch.nn.Conv2d(in_channels = 32, out_channels = 3, kernel_size = 3, padding = 'same')
+
+    def forward(self, x):
+        """     ENCODER      """
+        """Block 1"""
+        x0 = F.leaky_relu(self.enc_conv0(x), negative_slope = 0.1) 
+        x1 = self.pool1(F.leaky_relu(self.enc_conv1(x0), negative_slope = 0.1)) #48 x 16 x 16
+        #print("x1 shape : ", x1.shape)
+        
+        """Block 2"""
+        x2 = self.pool2(F.leaky_relu(self.enc_conv2(x1), negative_slope = 0.1)) #48 x 8 x 8
+        #print("x2 shape : ", x2.shape)
+        x5 = self.pool5(F.leaky_relu(self.enc_conv5(x2), negative_slope = 0.1)) #48 x 4 x 4
+        #print("x5 shape : ", x5.shape)
+
+        """     DECODER     """
+        """Block 3"""
+        x6 = F.leaky_relu(self.enc_conv6(x5), negative_slope = 0.1) #48 x 4 x 4
+        #print("x6 shape : ", x6.shape)
+        x7 = self.upsample5(x6) #48 x 8 x 8
+        #print("upsample")
+        #print("x7 shape : ", x7.shape)
+        
+
+        x16 = torch.cat((x7, x2), dim = 1) #96 x 8 x 8
+        #print("size of concat. : x16 : ", x16.shape)
+        x17 = F.leaky_relu(self.dec_conv3A(x16), negative_slope = 0.1)
+        #print("x17 shape : ", x17.shape)
+        x18 = F.leaky_relu(self.dec_conv3B(x17), negative_slope = 0.1)
+        #print("x18 shape : ", x18.shape)
+
+        x19 = self.upsample2(x18)
+        ##print("x19 shape : ", x19.shape)
+        x20 = torch.cat((x19, x1), dim = 1)
+        #print("concat : x20 shape : ", x20.shape)
+        x21 = F.leaky_relu(self.dec_conv2A(x20), negative_slope = 0.1)
+        #print("x21 shape : ", x21.shape)
+        x22 = F.leaky_relu(self.dec_conv2B(x21), negative_slope = 0.1)
+        #print("x22 shape : ", x22.shape)
+
+        x23 = self.upsample1(x22)
+        #print("x23 shape : ", x23.shape)
+        x24 = torch.cat((x23, x), dim = 1)
+        #print("concat x24 shape : ", x24.shape)
+        x25 = F.leaky_relu(self.dec_conv1A(x24), negative_slope = 0.1)
+        #print("x25 shape : ", x25.shape)
+        x26 = F.leaky_relu(self.dec_conv1B(x25), negative_slope = 0.1)
+        #print("x26 shape : ", x26.shape)
+
+        x27 = self.dec_conv1C(x26)
+
+        return x27

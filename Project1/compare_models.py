@@ -22,8 +22,8 @@ def compare_models_images(PATHS, models, noisy_imgs, ground_truth):
     plt.show()
 
 
-PATHS= ["./Noise2Noise/project1_1.pth", "./Noise2Noise/project1_2.pth"]
-models = [Noise2Noise(), Noise2Noise_2()]
+PATHS= ["./Noise2Noise/project1_1.pth", "./Noise2Noise/project1_2.pth", "./Noise2Noise/project1_3.pth"]
+models = [Noise2Noise(), Noise2Noise_2(), Noise2Noise_3()]
 """BATCH_SIZE = 1
 test_set = Dataset(SIZE, train = False)
 loader_1 = torch.utils.data.DataLoader(dataset = test_set,
