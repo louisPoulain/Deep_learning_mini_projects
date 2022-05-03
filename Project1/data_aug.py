@@ -222,23 +222,39 @@ class Dataset(torch.utils.data.Dataset):
         # get label
         X = self.x[index]
         Y = self.y[index]
+        X_trans = X
+        Y_trans= Y
 
+        seed = torch.randint(2147483647,(1,1)) # make a seed with numpy generator 
+        print("seed : ", seed.item())
+        #random.seed(seed) # apply this seed to img transforms
+        torch.manual_seed(seed.item()) # needed for torchvision 0.7
+        print("pb here")
         if self.transform is not None:
-            X, Y = self.transform(X), self.transform(Y)
-        return X, Y
+            X_trans = self.transform(X)
+
+        #random.seed(seed) # apply this seed to target tranfsorms
+        torch.manual_seed(seed.item()) # needed for torchvision 0.7
+        if self.transform is not None:
+            Y_trans = self.transform(Y)  
+
+        return X, Y, X_trans, Y_trans
 
 transform = transforms.Compose([
     #transforms.RandomCrop(size, padding=None, pad_if_needed=False, fill=0),
-    # normalize
-    #transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-    transforms.RandomHorizontalFlip(p=0.5)
+    # random crop and then resize
+    transforms.RandomResizedCrop((32, 32), scale=(0.08, 1.0), ratio=(0.75, 1.3333333333333333)), 
+    # horizontal flip with probability p 
+    transforms.RandomHorizontalFlip(p=0.5),
+    # vertical flip with probability p 
+    transforms.RandomVerticalFlip(p=0.5)
 ])
 
 
 #we replace the upsampling by conv transpose and shorten the model
 
-SIZE = 500
-BATCH_SIZE = 4
+SIZE = 4
+BATCH_SIZE = 1
 train_set = Dataset(SIZE, transform=transform)
 
 
@@ -259,12 +275,26 @@ loader_1 = torch.utils.data.DataLoader(dataset = train_set,
                                      shuffle = True)
 
 #OPTIMIZATION
-epochs = 20
+epochs = 2
 outputs = []
 losses = []
 for epoch in range(epochs):
     print("epoch : ", epoch)
-    for noisy_imgs_1, noisy_imgs_2 in loader_1:
+    for noisy_imgs_1, noisy_imgs_2, noisy_imgs_1_trans, noisy_imgs_2_trans in loader_1:
+        #plots the 4 given images. Values of the images are in between [0, 255].
+        plt.subplot(1, 4, 1)
+        plt.imshow(torch.squeeze(noisy_imgs_1).permute(1, 2, 0).int()) #int since the data has been changed to float for the NN.
+        plt.title("Noisy imgs 1")
+        plt.subplot(1, 4, 2)
+        plt.imshow(torch.squeeze(noisy_imgs_2).permute(1, 2, 0).int())
+        plt.title("Noisy imgs 2")
+        plt.subplot(1,4,3)
+        plt.imshow(torch.squeeze(noisy_imgs_1_trans).permute(1, 2, 0).int())
+        plt.title("transformed 1")
+        plt.subplot(1,4,4)
+        plt.imshow(torch.squeeze(noisy_imgs_2_trans).permute(1, 2, 0).int())
+        plt.title("transformed 2")
+        plt.show()
         #print(noisy_imgs_1.shape)
         #print(noisy_imgs_2.shape)
 
@@ -286,7 +316,7 @@ for epoch in range(epochs):
         # Storing the losses in a list for plotting
         losses.append(loss.detach().numpy())
     outputs.append((epochs, noisy_imgs_2, reconstructed))
-  
+""" 
 # Defining the Plot Style
 plt.style.use('fivethirtyeight')
 plt.xlabel('Iterations')
@@ -296,5 +326,5 @@ plt.ylabel('Loss')
 plt.plot(losses[-100:])
 plt.show()
 
-PATH = "./Noise2Noise/project1_3.pth"
-torch.save(model.state_dict(), PATH)
+PATH = "./Noise2Noise/project1_4.pth"
+torch.save(model.state_dict(), PATH)"""
