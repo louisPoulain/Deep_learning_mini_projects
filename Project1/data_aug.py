@@ -225,16 +225,12 @@ class Dataset(torch.utils.data.Dataset):
         X_trans = X
         Y_trans= Y
 
-        seed = torch.randint(2147483647,(1,1)) # make a seed with numpy generator 
-        print("seed : ", seed.item())
-        #random.seed(seed) # apply this seed to img transforms
-        torch.manual_seed(seed.item()) # needed for torchvision 0.7
-        print("pb here")
+        seed = torch.randint(2147483647,(1,1)) # make a seed with generator 
+        torch.manual_seed(seed.item()) # set the random seed for transforms
         if self.transform is not None:
             X_trans = self.transform(X)
 
-        #random.seed(seed) # apply this seed to target tranfsorms
-        torch.manual_seed(seed.item()) # needed for torchvision 0.7
+        torch.manual_seed(seed.item()) # set the random seed for transforms
         if self.transform is not None:
             Y_trans = self.transform(Y)  
 
