@@ -1,195 +1,13 @@
 import torch
 import torch.utils.data as data
 from torchvision import transforms
+import torchvision.transforms.functional as TF
 import matplotlib.pyplot as plt
 from utils import *
 
-
-"""class FunctionWrapperDouble2(Repr):
-    "A function wrapper that returns a partial for an input-target pair."
-
-    def __init__(self, function: Callable, *args, **kwargs):
-        from functools import partial
-        self.function = partial(function, *args, **kwargs)
-        
-        
-
-    def __call__(self, inp: np.ndarray, tar: dict):
-        inp,tar = self.function(inp,tar)
-        return inp, tar
-
-transforms_training = ComposeDouble([
-     FunctionWrapperDouble2(flip_horizontally),
-     FunctionWrapperDouble2(flip_vertically),
-     FunctionWrapperDouble2(rot90),
-     FunctionWrapperDouble(add_gaussian_noise,input=True,target=False),
-     FunctionWrapperDouble(resized,input=True,target=False),
-     FunctionWrapperDouble(normalize_0,input=True,target=False),
-     FunctionWrapperDouble(crop)
-])# validation transformations
-
-class SegmentationDataSet(data.Dataset):
-    def __init__(self,
-                 inputs: list,
-                 targets: list,
-                 transform=None
-                 ):
-        self.inputs = inputs
-        self.targets = targets
-        self.transform = transform
-        self.inputs_dtype = torch.float32
-        self.targets_dtype = torch.long(memory_format=torch.preserve_format)
-
-    def __len__(self):
-        return len(self.inputs)
-
-    def __getitem__(self,
-                    index: int):
-        # Select the sample
-        #input_ID = self.inputs[index]
-        #target_ID = self.targets[index]
-        x = self.inputs[index]
-        y = self.targets[index]
-        x = np.array(x)
-        y = np.array(y)
-        
-        # Load input and target
-        #x, y = imread(input_ID), imread(target_ID)
-
-        # Preprocessing
-        if self.transform is not None:
-            x, y = self.transform(x, y)
-
-        # Typecasting
-        x, y = torch.from_numpy(x).type(self.inputs_dtype), torch.from_numpy(y)#.type(self.targets_dtype)
-
-        return x, y
-    
-
-
-
-
-class SegmentationDataSet3(data.Dataset):
-    "Image segmentation dataset with caching, pretransforms and multiprocessing."
-    def __init__(self,
-                 inputs: list,
-                 targets: list,
-                 transform=None,
-                 use_cache=False,
-                 pre_transform=None,
-                 ):
-        self.inputs = inputs
-        self.targets = targets
-        self.transform = transform
-        self.inputs_dtype = torch.float32
-        self.targets_dtype = torch.long
-        self.use_cache = use_cache
-        self.pre_transform = pre_transform
-
-        if self.use_cache:
-            from multiprocessing import Pool
-            from itertools import repeat
-
-            with Pool() as pool:
-                self.cached_data = pool.starmap(self.read_images, zip(inputs, targets, repeat(self.pre_transform)))
-
-    def __len__(self):
-        return len(self.inputs)
-
-    def __getitem__(self,
-                    index: int):
-        if self.use_cache:
-            x, y = self.cached_data[index]
-        else:
-            x = self.inputs[index]
-            y = self.targets[index]
-            x = np.array(x,dtype=object)
-            y = np.array(y,dtype=object)
-
-        # Preprocessing
-        if self.transform is not None:
-            x, y = self.transform(x, y)
-            x= x.astype(float)
-            y = y.astype(float)
-           
-
-        # Typecasting
-        x, y = torch.from_numpy(x).type(self.inputs_dtype), torch.from_numpy(y).float()#type(self.targets_dtype)#.float()#
-
-        return x, y
-
-    @staticmethod
-    def read_images(inp, tar, pre_transform):
-        inp = np.array(inp,dtype=object)
-        tar = np.array(tar,dtype=object)
-        if pre_transform:
-            inp, tar = pre_transform(inp, tar)
-        return inp, tar
-
-class SegmentationDataSet(data.Dataset):
-    def __init__(self,
-                 inputs: list,
-                 targets: list,
-                 transform=None
-                 ):
-        self.inputs = inputs
-        self.targets = targets
-        self.transform = transform
-        self.inputs_dtype = torch.float32
-        self.targets_dtype = torch.long(memory_format=torch.preserve_format)
-
-    def __len__(self):
-        return len(self.inputs)
-
-    def __getitem__(self,
-                    index: int):
-        # Select the sample
-        #input_ID = self.inputs[index]
-        #target_ID = self.targets[index]
-        x = self.inputs[index]
-        y = self.targets[index]
-        x = np.array(x)
-        y = np.array(y)
-        
-        # Load input and target
-        #x, y = imread(input_ID), imread(target_ID)
-
-        # Preprocessing
-        if self.transform is not None:
-            x, y = self.transform(x, y)
-
-        # Typecasting
-        x, y = torch.from_numpy(x).type(self.inputs_dtype), torch.from_numpy(y)#.type(self.targets_dtype)
-
-        return x, y
-
-dataset_train = SegmentationDataSet4(inputs=inputs_train,
-                                    targets=targets_train,
-                                    transform=transforms_training,
-                                    use_cache= False,
-                                    pre_transform = None
-                                    )
-
-    # dataset validation
-dataset_valid = SegmentationDataSet4(inputs=inputs_valid,
-                                    targets=targets_valid,
-                                    transform=transforms_validation,
-                                    use_cache= False,
-                                    pre_transform = None
-                                    )
-
-
-
-# dataloader training
-dataloader_training = DataLoader(dataset=dataset_train,
-                                 batch_size=batch*N,
-                                 shuffle=False)
-
-# dataloader validation
-dataloader_validation = DataLoader(dataset=dataset_valid,
-                                   batch_size=batch*N,
-                                   shuffle=False)"""
-
+"""
+Here we explore data augmentation.
+"""
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
   def __init__(self, SIZE, train = True, transform = None):
@@ -222,36 +40,48 @@ class Dataset(torch.utils.data.Dataset):
         # get label
         X = self.x[index]
         Y = self.y[index]
-        X_trans = X
-        Y_trans= Y
+        X_trans = X.clone().detach()
+        Y_trans= Y.clone().detach()
 
         seed = torch.randint(2147483647,(1,1)) # make a seed with generator 
         torch.manual_seed(seed.item()) # set the random seed for transforms
         if self.transform is not None:
-            X_trans = self.transform(X)
+            X_trans = self.transform(X_trans)
 
         torch.manual_seed(seed.item()) # set the random seed for transforms
         if self.transform is not None:
-            Y_trans = self.transform(Y)  
+            Y_trans = self.transform(Y_trans)  
 
         return X, Y, X_trans, Y_trans
 
-transform = transforms.Compose([
-    #transforms.RandomCrop(size, padding=None, pad_if_needed=False, fill=0),
-    # random crop and then resize
-    transforms.RandomResizedCrop((32, 32), scale=(0.08, 1.0), ratio=(0.75, 1.3333333333333333)), 
+
+class MyRotateTransform(torch.nn.Module):
+    def __init__(self, angles, p=0.8):
+        self.angles = angles
+        self.p = p
+
+    def __call__(self, x):
+        #angle = random.choice(self.angles)
+        if torch.rand((1,1)) < self.p:
+            rand_index = torch.randint(low=0, high = len(self.angles), size = (1,1))
+            angle = self.angles[rand_index]
+        else : angle = 0
+        return TF.rotate(x, angle)
+
+
+transform2 = transforms.RandomApply(torch.nn.ModuleList([
     # horizontal flip with probability p 
-    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomHorizontalFlip(p=0.8),
     # vertical flip with probability p 
-    transforms.RandomVerticalFlip(p=0.5)
-])
+    transforms.RandomVerticalFlip(p=0.8),
+    # rotation of angle in angles with probility p
+    MyRotateTransform(angles = [90, 180, 270], p=0.8)]),
+    p=0.8) #randomly transform images with probability p
 
-
-#we replace the upsampling by conv transpose and shorten the model
 
 SIZE = 4
 BATCH_SIZE = 1
-train_set = Dataset(SIZE, transform=transform)
+train_set = Dataset(SIZE, transform=transform2)
 
 
 # Model Initialization
@@ -312,15 +142,3 @@ for epoch in range(epochs):
         # Storing the losses in a list for plotting
         losses.append(loss.detach().numpy())
     outputs.append((epochs, noisy_imgs_2, reconstructed))
-""" 
-# Defining the Plot Style
-plt.style.use('fivethirtyeight')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-  
-# Plotting the last 100 values
-plt.plot(losses[-100:])
-plt.show()
-
-PATH = "./Noise2Noise/project1_4.pth"
-torch.save(model.state_dict(), PATH)"""

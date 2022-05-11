@@ -2,6 +2,6 @@ Project 1
 - temps ? 45 minutes pour CPU ? comment réduire?
 - convolution a chaque layer : est-ce la même fonction conv qui est réutilisé ? ou est-ce qu'on déclare différentes fonctions? 
 - comment mesurer l'efficacité de notre modèle ? 
-
+	SSIM LPIPS
 Project 2
 
