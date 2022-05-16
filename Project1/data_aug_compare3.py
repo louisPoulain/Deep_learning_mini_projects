@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from utils import *
 
 """
-Here we explore data augmentation.
+Here we explore data augmentation. TERMINER D'éCRIRE ET FAIRE RUN.
 """
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
@@ -49,6 +49,25 @@ class Dataset(torch.utils.data.Dataset):
         torch.manual_seed(seed.item()) # set the random seed for transforms
         if self.transform is not None:
             Y_trans = self.transform(Y_trans)  
+        
+        torch.manual_seed(seed.item())
+        if self.switch_pixels is not None:
+            n_max, p = self.switch_pixels
+            # n_max : maximum number of pixels that might switch. 
+            # p : prob that the pixels are switched.
+            if torch.rand((1,1)) < p:
+                if n_max<50 :
+                    n_max = 51
+                # n : number of switched pixels, random in between 50 and n_max (not included)
+                n = torch.randint(low = 50, high = n_max, size = (1,1))
+                # index : random index of the n pixels that will be switched.
+                index = torch.randint(low=0, high = X_trans.shape[1], size = (n,2))
+                i,j = index[:, 0], index[:, 1]
+                v_x = Y_trans[:, i, j]
+                v_y = X_trans[:, i, j]
+
+                X_trans[:, i, j] = v_x
+                Y_trans[:, i, j] = v_y
 
         return X_trans, Y_trans
 
@@ -79,7 +98,9 @@ transform2 = transforms.RandomApply(torch.nn.ModuleList([
 
 SIZE = 50000
 BATCH_SIZE = 4
-train_set_aug = Dataset(SIZE, transform=transform2)
+n_max = 250 #about a fourth of the total number of pixels in a image.
+p = 0.5
+train_set_aug = Dataset(SIZE, transform=transform2, switch_pixels = [n_max, p])
 train_set = Dataset(SIZE)
 
 
