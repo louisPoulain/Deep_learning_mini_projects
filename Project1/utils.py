@@ -92,6 +92,7 @@ def compare_models(PATHS, models, names = None, SIZE = 1000):
     # Given a list PATHS of PATH (str) that leads to a model in the corresponding list models,
     # display a noisy image, its ground truth and the denoised images and compute the PSNR over SIZE images of the test set.
     BATCH_SIZE = 1
+    print("size : ", SIZE)
     test_set = Dataset(SIZE, train = False)
     loader_1 = torch.utils.data.DataLoader(dataset = test_set,
                                      batch_size = BATCH_SIZE,
