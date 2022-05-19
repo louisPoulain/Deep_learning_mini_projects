@@ -5,10 +5,10 @@ from utils import *
 model = Noise2Noise_3()
 model_aug = Noise2Noise_3()
 
-PATH = "./Data_aug/1_model.pth"
+PATH = "./Data_aug/AE_small5_model.pth"
 model.load_state_dict(torch.load(PATH))
 
-PATH_AUG = "./Data_aug/1_model_aug.pth"
+PATH_AUG = "./Data_aug/AE_small5_model_aug.pth"
 model_aug.load_state_dict(torch.load(PATH_AUG))
 
 PATHS = [PATH, PATH_AUG]

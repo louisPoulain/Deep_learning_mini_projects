@@ -8,9 +8,12 @@ from utils import *
 """
 Here we explore data augmentation. TERMINER D'éCRIRE ET FAIRE RUN.
 """
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
+
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
-  def __init__(self, SIZE, train = True, transform = None):
+  def __init__(self, SIZE, train = True, transform = None, switch_pixels = None):
         'Initialization'
         if train: 
             if SIZE > 50000: 
@@ -27,9 +30,14 @@ class Dataset(torch.utils.data.Dataset):
         x, y = x[:SIZE], y[:SIZE]
         print("Data reduced : \n noisy_imgs_1_reduced : ", x.shape, "\n noisy_imgs_2_reduced : ", y.shape)
         print("Type : ", x.dtype)
+        if transform != None :
+            print("With data augmentation : transform.")
+        if switch_pixels != None :
+            print("With data augmentation : switch pixels with n_max = ", switch_pixels[0], " and p = ", switch_pixels[1])
         self.x = x.float()
         self.y = y.float()
         self.transform = transform
+        self.switch_pixels = switch_pixels
 
   def __len__(self):
         'Denotes the total number of samples'
@@ -97,20 +105,20 @@ transform2 = transforms.RandomApply(torch.nn.ModuleList([
 
 
 SIZE = 50000
-BATCH_SIZE = 4
+BATCH_SIZE = 128
 n_max = 250 #about a fourth of the total number of pixels in a image.
 p = 0.5
-train_set_aug = Dataset(SIZE, transform=transform2, switch_pixels = [n_max, p])
+train_set_aug = Dataset(SIZE, transform=transform2)
 train_set = Dataset(SIZE)
 
 
 # Model Initialization
-model = Noise2Noise_3()
-model_aug = Noise2Noise_3()
+model = AE_small5()
+model_aug = AE_small5()
 model_aug.load_state_dict(model.state_dict()) 
   
 # Validation using MSE Loss function
-loss_function = torch.nn.L1Loss()
+loss_function = nn.MSELoss().to(device)
   
 # Using an Adam Optimizer with lr = 0.001
 optimizer = torch.optim.Adam(model.parameters(),
@@ -142,6 +150,8 @@ for epoch in range(epochs):
         #noisy_imgs_2 = noisy_imgs_2.reshape(-1, 32 * 32)    
         # Output of Autoencoder
         #print("type : ", noisy_imgs_1.dtype)
+        noisy_imgs_1 = noisy_imgs_1.to(device)
+        noisy_imgs_2 = noisy_imgs_2.to(device)
         reconstructed = model_aug(noisy_imgs_1)
             
         # Calculating the loss function
@@ -166,6 +176,8 @@ for epoch in range(epochs):
     for noisy_imgs_1, noisy_imgs_2 in loader_1:
         # Output of Autoencoder
         #print("type : ", noisy_imgs_1.dtype)
+        noisy_imgs_1 = noisy_imgs_1.to(device)
+        noisy_imgs_2 = noisy_imgs_2.to(device)
         reconstructed = model(noisy_imgs_1)
             
         # Calculating the loss function
@@ -190,13 +202,13 @@ plt.ylabel('Loss')
 plt.plot(losses[-100:])
 plt.plot(losses_aug[-100:])
 plt.legend(["Without augmentation", "With augmentation"])
-plt.savefig("./Data_aug/1_losses")
+plt.savefig("./Data_aug/AE_small5_losses")
 plt.show()
 
-PATH = "./Data_aug/1_model.pth"
+PATH = "./Data_aug/AE_small5_model.pth"
 torch.save(model.state_dict(), PATH)
 
 
-PATH = "./Data_aug/1_model_aug.pth"
+PATH = "./Data_aug/AE_small5_model_aug.pth"
 torch.save(model_aug.state_dict(), PATH)
 

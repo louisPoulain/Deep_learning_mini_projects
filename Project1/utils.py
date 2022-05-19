@@ -1,4 +1,5 @@
 import torch 
+import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
@@ -351,3 +352,70 @@ class Noise2Noise_3(torch.nn.Module):
         x27 = self.dec_conv1C(x26)
 
         return x27
+
+class AE_small5(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.pool = nn.MaxPool2d(kernel_size = 2)
+        self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 16, kernel_size = 3, padding = 1) # 32 x 32 
+        self.conv2 = nn.Conv2d(in_channels = 16, out_channels = 24, kernel_size = 3, padding = 1) 
+        self.conv3 = nn.Conv2d(in_channels = 24, out_channels = 48, kernel_size = 3, padding = 1) 
+        self.conv4 = nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 1) 
+        self.conv5 = nn.Conv2d(in_channels = 48, out_channels = 48, kernel_size = 3, padding = 1) 
+        
+        self.deconv1 = nn.Conv2d(in_channels = 96, out_channels = 48, kernel_size = 3, padding = 1) 
+        self.deconv2 = nn.Conv2d(in_channels = 96, out_channels = 48, kernel_size = 3, padding = 1) 
+        self.deconv3 = nn.Conv2d(in_channels = 72, out_channels = 24, kernel_size = 3, padding = 1) 
+        self.deconv4 = nn.Conv2d(in_channels = 40, out_channels = 16, kernel_size = 3, padding = 1) 
+        self.deconv5 = nn.Conv2d(in_channels = 19, out_channels = 3, kernel_size = 3, padding = 1) 
+        
+        self.l_relu = nn.LeakyReLU(negative_slope = 0.1)
+        self.upsample = nn.Upsample(scale_factor = (2, 2))
+        self.linear = nn.Linear(32, 32)
+        #self.dropout = nn.Dropout(0.5)
+        
+        
+  
+    def forward(self, x):
+        # encode
+        x1 = self.l_relu(self.conv1(x))
+        x1 = self.l_relu(self.pool(x1))
+
+        x2 = self.l_relu(self.conv2(x1))
+        x2 = self.l_relu(self.pool(x2))
+
+        x3 = self.l_relu(self.conv3(x2))
+        x3 = self.l_relu(self.pool(x3))
+
+        x4 = self.l_relu(self.conv4(x3))
+        x4 = self.l_relu(self.pool(x4))
+
+        x5 = self.l_relu(self.conv5(x4))
+        #print(x5.shape)
+
+        # decode
+        y1 = torch.cat((x5, x4), dim = 1)
+        y1 = self.l_relu(self.upsample(y1))
+        y1 = self.l_relu(self.deconv1(y1))
+        #print(y1.shape)
+
+        y2 = torch.cat((y1, x3), dim = 1)
+        y2 = self.l_relu(self.upsample(y2))
+        y2 = self.l_relu(self.deconv2(y2))
+        #print(y2.shape)
+
+        y3 = torch.cat((y2, x2), dim = 1)
+        y3 = self.l_relu(self.upsample(y3))
+        y3 = self.l_relu(self.deconv3(y3))
+        #print(y3.shape)
+
+        y4 = torch.cat((y3, x1), dim = 1)
+        y4 = self.l_relu(self.upsample(y4))
+        y4 = self.l_relu(self.deconv4(y4))
+        #print(y4.shape)
+
+        y5 = torch.cat((y4, x), dim = 1)
+        #print(y5.shape)
+        y5 = self.linear(self.deconv5(y5))
+        
+        return y5

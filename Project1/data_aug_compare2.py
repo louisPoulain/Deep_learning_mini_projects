@@ -68,8 +68,8 @@ class Dataset(torch.utils.data.Dataset):
                 n = torch.randint(low = 50, high = n_max, size = (1,1))
                 index = torch.randint(low=0, high = X_trans.shape[1], size = (n,2))
                 i,j = index[:, 0], index[:, 1]
-                v_x = Y_trans[:, i, j]
-                v_y = X_trans[:, i, j]
+                v_x = Y_trans[:, i, j].copy()
+                v_y = X_trans[:, i, j].copy()
 
                 X_trans[:, i, j] = v_x
                 Y_trans[:, i, j] = v_y
