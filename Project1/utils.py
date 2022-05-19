@@ -8,6 +8,40 @@ def psnr(denoised, ground_truth):
     mse = torch.mean((denoised - ground_truth) ** 2)
     return -10 * torch.log10(mse + 10**-8)
 
+class SSIM(nn.Module):
+    def __init__(self, window_size = 8, max_val = 1.):
+        super(SSIM, self).__init__()
+        self.max_val = max_val
+        window = torch.ones((window_size, window_size))
+        self.kernel = window.repeat(3, 1, 1, 1) #repeat the window on the 3 channels
+
+        self.C1 = (0.01 * self.max_val) ** 2
+        self.C2 = (0.03 * self.max_val) ** 2
+
+    def forward(self, groundtruth: torch.Tensor, noisy_img: torch.Tensor): 
+        kernel = self.kernel.to(groundtruth.device).to(noisy_img.dtype)
+        mu1: torch.Tensor = F.conv2d(groundtruth, kernel, groups = 3)
+        mu2: torch.Tensor = F.conv2d(noisy_img, kernel, groups = 3)
+
+        mu1_square = mu1.pow(2)
+        mu2_square = mu2.pow(2)
+        mu1_mu2 = mu1 * mu2
+
+        sigma1_square =  F.conv2d(groundtruth * groundtruth, kernel, groups = 3) - mu1_square
+        sigma2_square =  F.conv2d(noisy_img * noisy_img, kernel, groups = 3) - mu2_square
+        sigma12 =  F.conv2d(groundtruth * noisy_img, kernel, groups = 3) - mu1_mu2
+
+        ssim = ((2 * mu1_mu2 + self.C1)*(2 * sigma12 + self.C2)) / ((mu1_square + mu2_square + self.C1) * (sigma1_square + sigma2_square + self.C2))
+
+        loss = 1-ssim
+        loss = torch.mean(loss)
+
+        return loss
+
+
+def ssim(ground_truth, noisy_img, window_size = 8, max_val = 1.):
+    return SSIM(window_size = window_size, max_val = max_val)(ground_truth , noisy_img)
+
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
   def __init__(self, SIZE, train = True):
@@ -54,7 +88,7 @@ def plot_3imgs(denoised, ground_truth, noisy_imgs):
     plt.title("Denoised")
     plt.show()
 
-def compare_models(PATHS, models, SIZE = 1000):
+def compare_models(PATHS, models, names = None, SIZE = 1000):
     # Given a list PATHS of PATH (str) that leads to a model in the corresponding list models,
     # display a noisy image, its ground truth and the denoised images and compute the PSNR over SIZE images of the test set.
     BATCH_SIZE = 1
@@ -69,15 +103,21 @@ def compare_models(PATHS, models, SIZE = 1000):
         model = models[j]
         model.load_state_dict(torch.load(PATH))
         PSNR = torch.empty(size = (1, SIZE))
+        SSIMs = torch.empty(size = (1, SIZE))
         i = 0
         for noisy_imgs, ground_truth in loader_1:
             denoised = model(noisy_imgs)
             PSNR[0, i] = psnr(denoised/255, ground_truth/255)
+            SSIMs[0, i] = 1-ssim(ground_truth/255, denoised/255)
             i += 1
-        print("Model ", j, " :", torch.mean(PSNR).item()) #display the mean of PSNR over the test set.
+        print("Model ", j, " PSNR:", torch.mean(PSNR).item()) #display the mean of PSNR over the test set.
+        print("Model ", j, " SSIM:", torch.mean(SSIMs).item())
         plt.subplot(1, N, j+3)
         plt.imshow(torch.squeeze(denoised).permute(1, 2, 0).int())
-        plt.title("model " + str(j))
+        if names != None:
+            plt.title("model " + names[j])
+        else:
+            plt.title("model " + str(j))
     
     plt.subplot(1, N, 1)
     plt.imshow(torch.squeeze(noisy_imgs).permute(1, 2, 0).int()) #int since the data has been changed to float for the NN.
