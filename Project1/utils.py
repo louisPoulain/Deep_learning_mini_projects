@@ -99,7 +99,6 @@ def compare_models(PATHS, models, names = None, SIZE = 1000):
                                      shuffle = False)
     #number of images to plot
     N = len(PATHS) + 2 
-    print("PSNR :")
     for j, PATH in enumerate(PATHS):
         model = models[j]
         model.load_state_dict(torch.load(PATH))
@@ -116,7 +115,7 @@ def compare_models(PATHS, models, names = None, SIZE = 1000):
         plt.subplot(1, N, j+3)
         plt.imshow(torch.squeeze(denoised).permute(1, 2, 0).int())
         if names != None:
-            plt.title("model " + names[j])
+            plt.title(names[j])
         else:
             plt.title("model " + str(j))
     
