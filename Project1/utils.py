@@ -51,7 +51,7 @@ def ssim(ground_truth, noisy_img, max_val = 1.):
 
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
-  def __init__(self, SIZE, train = True):
+  def __init__(self, SIZE, train = True, transform = None, switch_pixels = None):
         'Initialization'
         if train: 
             if SIZE > 50000: 
@@ -68,8 +68,14 @@ class Dataset(torch.utils.data.Dataset):
         x, y = x[:SIZE], y[:SIZE]
         print("Data reduced : \n noisy_imgs_1_reduced : ", x.shape, "\n noisy_imgs_2_reduced : ", y.shape)
         print("Type : ", x.dtype)
+        if transform != None :
+            print("With data augmentation : transform.")
+        if switch_pixels != None :
+            print("With data augmentation : switch pixels with n_max = ", switch_pixels[0], " and p = ", switch_pixels[1])
         self.x = x.float()
         self.y = y.float()
+        self.transform = transform
+        self.switch_pixels = switch_pixels
 
   def __len__(self):
         'Denotes the total number of samples'
@@ -78,9 +84,38 @@ class Dataset(torch.utils.data.Dataset):
   def __getitem__(self, index):
         'Generates one sample of data'
         # get label
-        X = self.x[index]
-        Y = self.y[index]
-        return X, Y
+        X_trans = self.x[index]
+        Y_trans= self.y[index]
+
+        seed = torch.randint(2147483647,(1,1)) # make a seed with generator 
+        torch.manual_seed(seed.item()) # set the random seed for transforms
+        if self.transform is not None:
+            X_trans = self.transform(X_trans)
+
+        torch.manual_seed(seed.item()) # set the random seed for transforms
+        if self.transform is not None:
+            Y_trans = self.transform(Y_trans)  
+        
+        torch.manual_seed(seed.item())
+        if self.switch_pixels is not None:
+            n_max, p = self.switch_pixels
+            # n_max : maximum number of pixels that might switch. 
+            # p : prob that the pixels are switched.
+            if torch.rand((1,1)) < p:
+                if n_max<50 :
+                    n_max = 51
+                # n : number of switched pixels, random in between 50 and n_max (not included)
+                n = torch.randint(low = 50, high = n_max, size = (1,1))
+                # index : random index of the n pixels that will be switched.
+                index = torch.randint(low=0, high = X_trans.shape[1], size = (n,2))
+                i,j = index[:, 0], index[:, 1]
+                v_x = Y_trans[:, i, j]
+                v_y = X_trans[:, i, j]
+
+                X_trans[:, i, j] = v_x
+                Y_trans[:, i, j] = v_y
+
+        return X_trans, Y_trans
 
 def plot_3imgs(denoised, ground_truth, noisy_imgs): 
     #plots the 3 given images. Values of the images are in between [0, 255].
