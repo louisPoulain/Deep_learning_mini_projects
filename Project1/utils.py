@@ -67,7 +67,6 @@ class Dataset(torch.utils.data.Dataset):
             print("Test data : \n noisy_imgs : ", x.shape, "\n clean_imgs : ", y.shape)
         x, y = x[:SIZE], y[:SIZE]
         print("Data reduced : \n noisy_imgs_1_reduced : ", x.shape, "\n noisy_imgs_2_reduced : ", y.shape)
-        print("Type : ", x.dtype)
         if transform != None :
             print("With data augmentation : transform.")
         if switch_pixels != None :

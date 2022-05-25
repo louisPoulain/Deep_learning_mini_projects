@@ -17,7 +17,7 @@ except ImportError:
 version = sys.version_info[:2]
 if version < (3, 6):
     raise RuntimeError("This script uses f-strings, which requires Python version >= 3.6. Use a newer version of Python.")
-
+ 
 
 """
 Note to students:
