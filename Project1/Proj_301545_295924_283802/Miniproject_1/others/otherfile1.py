@@ -82,6 +82,8 @@ class Dataset_aug(torch.utils.data.Dataset):
             print("With data augmentation : transform.")
         if switch_pixels != None :
             print("With data augmentation : switch pixels with n_max = ", switch_pixels[0], " and p = ", switch_pixels[1])
+        if x.max() > 1:
+            x, y = x / 255, y / 255
         self.x = x.float()
         self.y = y.float()
         self.transform = transform
@@ -134,6 +136,8 @@ class Dataset(torch.utils.data.Dataset): #A TESTER
         x, y = train_input, train_target
         self.x = x.float()
         self.y = y.float()
+        if x.max() > 1:
+            x, y = x / 255, y / 255
 
   def __len__(self):
         'Denotes the total number of samples'
