@@ -74,6 +74,7 @@ class Conv2d(Module):
             print("\nGRAD WEIGHT :")
             d = a @ self.unfolded.transpose(1,2) #B x C_out x (C_in x k x k)
             print("multiply a by unfolded transpose, d :", d.shape)
+            #sum over the first batch dimension
             e = d.sum(dim=0) # C_out x (C_in x k x k)
             print("sum first dim of d, e : ", e.shape)
             self.grad_weight = e.view(self.out_channels, self.in_channels, self.kernel_size[0], self.kernel_size[1]) # C_out x C_in x k x k
