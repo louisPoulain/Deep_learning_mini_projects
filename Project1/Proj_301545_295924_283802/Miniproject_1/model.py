@@ -19,9 +19,9 @@ class Model():
     def load_pretrained_model(self) -> None:
         ## This loads the parameters saved in bestmodel.pth into the model pass
         model_path = Path(__file__).parent / "bestmodel.pth"
-        self.model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'))) #REMOVE MAP LOCATION AT THE END (ONLY FOR MY COMPUTER)
+        self.model.load_state_dict(torch.load(model_path))
         
-    def train(self, train_input, train_target, num_epochs = 10) -> None:
+    def train(self, train_input, train_target, num_epochs = 1) -> None:
         #:train ̇input: tensor of size (N, C, H, W) containing a noisy version of the images. same images, which only differs from the input by their noise.
         #:train ̇target: tensor of size (N, C, H, W) containing another noisy version of the
         train_set = utils.Dataset(train_input, train_target) 
