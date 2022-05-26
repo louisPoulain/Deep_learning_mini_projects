@@ -21,7 +21,6 @@ class AE(torch.nn.Module):
         
         self.l_relu = nn.LeakyReLU(negative_slope = 0.1)
         self.upsample = nn.Upsample(scale_factor = (2, 2))
-        #self.dropout = nn.Dropout(0.5)
     
 
     def forward(self, x):
@@ -39,42 +38,36 @@ class AE(torch.nn.Module):
         x8 = self.l_relu(self.pool(x7))
 
         x9 = self.l_relu(self.conv5(x8))
-        #print(x5.shape)
 
         # decode
         y1 = torch.cat((x8, x9), dim = 1)
         y2 = self.l_relu(self.upsample(y1))
         y3 = self.l_relu(self.deconv1(y2))
-        #print(y1.shape)
 
         y4 = torch.cat((y3, x7), dim = 1)
         y5 = torch.cat((x6, y4), dim = 1)
         y6 = self.l_relu(self.upsample(y5))
         y7 = self.l_relu(self.deconv2(y6))
-        #print(y2.shape)
 
         y8 = torch.cat((y7, x5), dim = 1)
         y9 = torch.cat((x4, y8), dim = 1)
         y10 = self.l_relu(self.upsample(y9))
         y11 = self.l_relu(self.deconv3(y10))
-        #print(y3.shape)
 
         y12 = torch.cat((y11, x3), dim = 1)
         y13 = torch.cat((x2, y12), dim = 1)
         y14 = self.l_relu(self.upsample(y13))
         y15 = self.l_relu(self.deconv4(y14))
-        #print(y4.shape)
 
         y16 = torch.cat((y15, x1), dim = 1)
         y17 = torch.cat((x, y16), dim = 1)
-        #print(y5.shape)
         y18 = self.l_relu(self.deconv5(y17) + x)
         
         return y18
 
 #Dataset
 class Dataset_aug(torch.utils.data.Dataset): 
-  'Characterizes a dataset for PyTorch'
+  'Characterizes a dataset with data augmentation for PyTorch'
   def __init__(self, train_input, train_target, transform = None, switch_pixels = None):
         'Initialization'
         x, y = train_input, train_target
@@ -82,7 +75,7 @@ class Dataset_aug(torch.utils.data.Dataset):
             print("With data augmentation : transform.")
         if switch_pixels != None :
             print("With data augmentation : switch pixels with n_max = ", switch_pixels[0], " and p = ", switch_pixels[1])
-        if x.max() > 1:
+        if x.max() > 1: #if the data is not normalized, we devided the values by 255.
             x, y = x / 255, y / 255
         self.x = x.float()
         self.y = y.float()
@@ -129,14 +122,14 @@ class Dataset_aug(torch.utils.data.Dataset):
 
         return X_trans, Y_trans
 
-class Dataset(torch.utils.data.Dataset): #A TESTER
-  'Characterizes a dataset for PyTorch'
+class Dataset(torch.utils.data.Dataset): 
+  'Characterizes a dataset without data augmentatio for PyTorch'
   def __init__(self, train_input, train_target):
         'Initialization'
         x, y = train_input, train_target
         self.x = x.float()
         self.y = y.float()
-        if x.max() > 1:
+        if x.max() > 1: #if the data is not normalized, we devided the values by 255.
             x, y = x / 255, y / 255
 
   def __len__(self):
@@ -150,4 +143,3 @@ class Dataset(torch.utils.data.Dataset): #A TESTER
         Y_trans= self.y[index]
 
         return X_trans, Y_trans
-
