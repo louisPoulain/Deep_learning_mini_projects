@@ -5,7 +5,7 @@ import torch
 import math
 import random
 from pathlib import Path
-from .others.Modules import Module, MSE ,Conv2d ,NearestUpsampling ,ReLU ,Sigmoid ,SGD ,Sequential
+from others.Modules import Module, MSE ,Conv2d ,NearestUpsampling ,ReLU ,Sigmoid ,SGD ,Sequential
 import pickle
 import os
 
@@ -23,7 +23,7 @@ class Model():
         
 
     def load_pretrained_model(self) :
-        filename = Path(__file__).parent / "bestmodel.pikle"
+        filename = Path(__file__).parent / "bestmodel.pickle"
         with open(filename, 'rb') as f:
             param = pickle.load(f)
             i = 0

@@ -19,7 +19,6 @@ class AE(torch.nn.Module):
         self.deconv4 = nn.Conv2d(in_channels = 64, out_channels = 16, kernel_size = 3, padding = 1) 
         self.deconv5 = nn.Conv2d(in_channels = 35, out_channels = 3, kernel_size = 3, padding = 1) 
         
-        self.relu = nn.ReLU()
         self.l_relu = nn.LeakyReLU(negative_slope = 0.1)
         self.upsample = nn.Upsample(scale_factor = (2, 2))
     
@@ -62,7 +61,7 @@ class AE(torch.nn.Module):
 
         y16 = torch.cat((y15, x1), dim = 1)
         y17 = torch.cat((x, y16), dim = 1)
-        y18 = self.relu(self.deconv5(y17) + x)
+        y18 = torch.clamp((self.deconv5(y17) + x), 0, 1)
         
         return y18
 
@@ -128,10 +127,10 @@ class Dataset(torch.utils.data.Dataset):
   def __init__(self, train_input, train_target):
         'Initialization'
         x, y = train_input, train_target
-        self.x = x.float()
-        self.y = y.float()
         if x.max() > 1: #if the data is not normalized, we devided the values by 255.
             x, y = x / 255, y / 255
+        self.x = x.float()
+        self.y = y.float()
 
   def __len__(self):
         'Denotes the total number of samples'
