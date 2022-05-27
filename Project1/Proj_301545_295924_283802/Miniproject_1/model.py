@@ -19,9 +19,9 @@ class Model():
     def load_pretrained_model(self) -> None:
         ## This loads the parameters saved in bestmodel.pth into the model pass
         model_path = Path(__file__).parent / "bestmodel.pth"
-        self.model.load_state_dict(torch.load(model_path))
+        self.model.load_state_dict(torch.load(model_path, map_location = torch.device(device)))
         
-    def train(self, train_input, train_target, num_epochs = 1) -> None:
+    def train(self, train_input, train_target, num_epochs) -> None:
         #:train ̇input: tensor of size (N, C, H, W) containing a noisy version of the images. same images, which only differs from the input by their noise.
         #:train ̇target: tensor of size (N, C, H, W) containing another noisy version of the
         train_set = utils.Dataset(train_input, train_target) 
@@ -48,5 +48,12 @@ class Model():
     def predict(self, test_input) -> torch.Tensor:
         #:test ̇input: tensor of size (N1, C, H, W) with values in range 0-255 that has to be denoised by the trained or the loaded network.
         #:returns a tensor of the size (N1, C, H, W) with values in range 0-255.
-        reconstructed = self.model(test_input)
+        #input = test_input.byte()
+        #print("in predict : ", input.type())
+        #reconstructed = self.model(test_input)
+        if test_input.max() > 1: #if the data is not normalized, we devided the values by 255.
+            test_input = test_input / 255
+            reconstructed = 255*self.model(test_input)
+        else :
+            reconstructed = self.model(test_input) 
         return reconstructed

@@ -19,6 +19,7 @@ class AE(torch.nn.Module):
         self.deconv4 = nn.Conv2d(in_channels = 64, out_channels = 16, kernel_size = 3, padding = 1) 
         self.deconv5 = nn.Conv2d(in_channels = 35, out_channels = 3, kernel_size = 3, padding = 1) 
         
+        self.relu = nn.ReLU()
         self.l_relu = nn.LeakyReLU(negative_slope = 0.1)
         self.upsample = nn.Upsample(scale_factor = (2, 2))
     
@@ -61,7 +62,7 @@ class AE(torch.nn.Module):
 
         y16 = torch.cat((y15, x1), dim = 1)
         y17 = torch.cat((x, y16), dim = 1)
-        y18 = self.l_relu(self.deconv5(y17) + x)
+        y18 = self.relu(self.deconv5(y17) + x)
         
         return y18
 

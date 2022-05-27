@@ -1,6 +1,6 @@
 import torch
 import math
-
+#import pickle
 
 #########################################################################################################################################
 
@@ -85,26 +85,29 @@ class Conv2d(Module):
              return self.result
 
       def backward (self, gradwrtoutput):
-             #grad of the loss wrt to the bias: 
+           
+            
              if self.bias_:
                 self.grad_bias = gradwrtoutput.sum(dim=[0, 2, 3])
 
-             a = gradwrtoutput.reshape(self.wxb.shape) # B x C_out x (H_out x W_out)    
-             b = a.transpose(1, 2) # B x (H_out x W_out) x C_out
-             # self.w shape : C_out x (C_in x k x k)
-             c = b.matmul(self.w) # B x (H_out x W_out) x (C_in x k x k)
-
-             #compute grad of the loss with respect to the weights:
-             d = a @ self.unfolded.transpose(1,2) # B x C_out x (C_in x k x k)
-             #sum on the batch dimension
-             e = d.sum(dim=0) # C_out x (C_in x k x k) 
-             self.grad_weight = e.view(self.out_channels, self.in_channels, self.kernel_size[0], self.kernel_size[1]) # C_out x C_in x k x k
+             a = gradwrtoutput.reshape(self.wxb.shape) #1 x 4 x 961
+             
+             b = a.transpose(1, 2)
+             
+             c = b.matmul(self.w) #1x961x12
             
-            #compute grad of the loss wrt input:
-             h = c.transpose(1, 2) # B x (C_in x k x k) x (H_out x W_out) 
+             d = a @ self.unfolded.transpose(1,2)
+
+             e = d.sum(dim=0) #12x4
+             
+             f = e.t()
+            
+             self.grad_weight = e.view(self.out_channels, self.in_channels, self.kernel_size[0], self.kernel_size[1]) 
+             
+             h = c.transpose(1, 2)
              
              self.grad_inputX = torch.nn.functional.fold(h, (self.h_in,self.w_in), self.kernel_size,
-                                                stride=self.stride,padding = self.padding) # B x C_in x H_in x W_in
+                                                stride=self.stride,padding = self.padding)
 
              return self.grad_inputX
       
