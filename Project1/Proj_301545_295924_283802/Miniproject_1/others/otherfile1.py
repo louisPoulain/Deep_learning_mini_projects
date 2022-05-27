@@ -1,7 +1,9 @@
 import torch 
 import torch.nn.functional as F
 import torch.nn as nn
-#HI NOUVEAU 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 #model:
 class AE(torch.nn.Module):
     def __init__(self):

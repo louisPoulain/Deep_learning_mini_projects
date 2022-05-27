@@ -1,14 +1,10 @@
-from pickletools import optimize
-
-import numpy as np
 import torch
-import math
 import random
 from pathlib import Path
-from others.Modules import Module, MSE ,Conv2d ,NearestUpsampling ,ReLU ,Sigmoid ,SGD ,Sequential
+from .others.Modules import Module, MSE ,Conv2d ,NearestUpsampling ,ReLU ,Sigmoid ,SGD ,Sequential
 import pickle
-import os
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Model():
     def  __init__(self):
@@ -68,7 +64,10 @@ class Model():
         
        
     def predict(self, x):
-       x = x/255.0
-       return self.seq.forward(x)*255
+        if x.max() > 1:
+            x = x/255.0
+            return self.seq.forward(x)*255
+        else : 
+            return self.seq.forward(x)
 
     
